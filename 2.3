@@ -1,0 +1,242 @@
+library(writexl)
+library(readxl) #Load the readxl Library for Excel Files
+library(dplyr) #Load the dplyr for data manipulation and
+transformation
+library(IRdisplay) #Load the IRDisplay library to help interact with
+Jupyter notebooks
+# Variables
+todays_date <- format(Sys.Date(), "%Y-%m-%d")
+student_id <- "StudentID"
+# Read the Excel file into a data frame
+file_path <-
+"C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task1.xlsx"
+df <- read_excel(file_path)
+# Find duplicate rows before cleaning
+duplicate_rows_before <- df[duplicated(df),]
+# Display Header Text
+display_markdown(paste("###", student_id, "-", todays_date))
+#Display duplicate rows before cleaning
+display_markdown("### Duplicate Rows before cleaning")
+display(duplicate_rows_before)
+# Make a copy of the data frame and remove duplicates
+df_cleaned <- df
+df_cleaned <- df_cleaned %>% distinct()
+# Find duplicate rows after cleaning
+duplicate_rows_after <- df_cleaned[duplicated(df_cleaned),]
+# Display duplicate rows after cleaning
+display_markdown("### Duplicate Rows after cleaning")
+display(duplicate_rows_after)
+# Count the number of unique countries before cleaning
+count_before <- table(df$`Country or region`)
+# Manually identified misspelled countries and their corrections
+misspellings_correction <- c( 'Icleand' = 'Iceland','Swtierland' =
+'Switzerland','Canda' = 'Canada'
+)
+# Replace misspelled countries in the "cleaned" data frame
+df_cleaned$`Country or region` <- as.character(df_cleaned$`Country
+or region`) # Convert to character type if it's not
+df_cleaned$`Country or region` <- ifelse(df_cleaned$`Country or
+region` %in% names(misspellings_correction),
+misspellings_correction[df_cleaned$`Country or region`],
+df_cleaned$`Country or
+region`)
+# Count the number of unique countries after cleaning
+count_after <- table(df_cleaned$`Country or region`)
+# Calculate the number of replaced entries
+replaced_count <- sum(count_before[names(count_before) %in%
+names(misspellings_correction)] -
+count_after[names(misspellings_correction)])
+# Display Header Text
+display_markdown(paste("###", student_id, "-", todays_date))
+# Display the number of replaced entries
+display_markdown(paste("**", replaced_count, "entries were
+replaced.**"))
+#Find the number of missing values in each column before filling
+missing_values_before <- sapply(df, function(x) sum(is.na(x)))
+# Display Header Text
+display_markdown(paste("###", student_id, "-", todays_date))
+# Display the number of missing values in each column
+display_markdown("### Number of missing values in each column")
+display (missing_values_before)
+# Fill missing values with the median value of each column
+# Median is less sensitive to outliers
+df_cleaned <- df_cleaned %>% mutate(across(everything(), ~
+ifelse(is.na(.), median (., na.rm=TRUE), .)))
+# Find the number of missing values in each column after filling
+missing_values_after <- sapply(df_cleaned, function(x) sum(is.na(x)))
+# Display the number of missing values in each column after filling
+display_markdown("### Number of missing values in each column after
+filling with median")
+display(missing_values_after)
+outliers <- list() # Initialize a list to store data frames containing
+outliers for each column
+numerical_columns <- names(df)[sapply(df, is.numeric)] # Identify
+numerical columns
+# Find outliers using 3.5* IQR method for each numerical column
+for (col in numerical_columns) {
+Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
+Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
+IQR <- Q3 - Q1
+outliers [[col]] <- df[(df[[col]] < Q1 - 3.5 * IQR) | (df[[col]] >
+Q3 + 3.5 * IQR),]
+}
+# Display Header Text
+display_markdown(paste("###", student_id, "-", todays_date))
+# Display Outliers
+display_markdown("### Outliers")
+for (col in names(outliers)) {
+if (nrow(outliers[[col]]) > 0) {
+display_markdown(paste("**", col, ":**"))
+display(outliers[[col]][col])
+}
+}
+# Handle outliers by replacing them with the median value of each
+column
+display_markdown("**After cleaning:**")
+for (col in names(outliers)) {
+if (nrow(outliers[[col]]) > 0) {
+median_value <- median(df_cleaned[[col]], na.rm = TRUE)
+outlier_indices <- as.integer(rownames(outliers[[col]]))
+df_cleaned[outlier_indices, col] <- median_value
+display_markdown(paste("**", col, ":**"))
+display(df_cleaned[outlier_indices, col])
+}
+}
+# Save the cleaned DataFrame to an Excel file
+cleaned_file_path <-
+"C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task1_Cleaned_R.xls
+x"
+write_xlsx(df_cleaned, cleaned_file_path)
+
+Task 2
+library(readxl)
+library(IRdisplay)
+# Variables
+todays_date <- format(Sys.Date(), "%Y-%m-%d")
+student_id <- "StudentID"
+# Read the Excel file into a data frame
+file_path <-
+"C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+# Display Header Text
+display_markdown(paste("###", student_id, "-", todays_date))
+# Calculate Mean Happiness Score
+mean_happiness_score <- mean(df_new$Score, na.rm = TRUE)
+# Calculate Standard Deviation of Happiness Score
+std_happiness_score <- sd(df_new$Score, na.rm = TRUE)
+# Calculate Median Happiness Score
+median_happiness_score <- median(df_new$Score, na.rm = TRUE)
+# Calculate Correlation between Happiness Score and Life Expectancy
+correlation_happiness_life_expectancy <- cor(df_new$Score,
+df_new$`Healthy life expectancy`, use = "pairwise.complete.obs")
+# Calculate Minimum Happiness Score
+min_happiness_score <- min(df_new$Score, na.rm = TRUE)
+# Calculate Maximum Happiness Score
+max_happiness_score <- max(df_new$Score, na.rm = TRUE)
+# Calculate 25th percentile of Freedom Scores
+freedom_25th_percentile <- quantile(df_new$`Freedom to make life
+choices`, 0.25, na.rm = TRUE)
+# Display Calculated Statistics
+print(paste("Mean Happiness Score:", mean_happiness_score))
+print(paste("Standard Deviation of Happiness Score:",
+std_happiness_score))
+print(paste("Median Happiness Score:", median_happiness_score))
+print(paste("Correlation between Happiness Score and Life
+Expectancy:", correlation_happiness_life_expectancy))
+print(paste("Minimum Happiness Score:", min_happiness_score))
+print(paste("Maximum Happiness Score:", max_happiness_score))
+print(paste("25th Percentile of Freedom Scores:",
+freedom_25th_percentile))
+
+Task3
+# Load required libraries if not already loaded
+library(readxl) #Read excel files
+library(ggplot2) #Visualization package for R
+library (dplyr) #Data manipulation and transformation in R
+library(corrplot) #Visualization of correlation matrices
+# Variables
+student_id <- "<Student ID>"
+# Read the Excel file into a data frame
+file_path <-
+"C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+# Get current date and time
+current_datetime <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+# Histogram of Number of Countries vs Happiness Score
+ggplot(df_new, aes(x = Score)) +
+geom_histogram(binwidth = 0.2, fill = "skyblue", color =
+"black") +
+xlab("Happiness Score") +
+ylab("Number of Countries") +
+ggtitle(paste("Histogram of Number of Countries vs Happiness
+Score - Student ID:", student_id, "-", current_datetime)) +
+theme_minimal() + theme(panel.grid.major = element_line(colour =
+"grey"))
+
+Task4
+# Variables
+student_id <- "<Student ID>"
+# Read the Excel file into a data frame
+file_path <-
+"C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+# Get current date and time
+current_datetime <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+# Select Top 10 Countries by Happiness Score
+top_10_countries <- df_new %>% arrange(desc(Score)) %>% head(10)
+# Bar Chart for Top 10 Countries by Happiness Score
+ggplot(top_10_countries, aes(x = reorder(`Country or region`, -Score),
+y = Score)) +
+geom_bar(stat = "identity", fill = "green") +
+xlab("Country") +
+ylab("Happiness Score") +
+ggtitle(paste("Top 10 Countries by Happiness Score - Student
+ID:", student_id, "-", current_datetime)) +
+coord_flip() +
+theme_minimal() +
+theme(panel.grid.major = element_line(colour = "grey"))
+
+Task5
+# Variables
+student_id <- "<Student ID>"
+# Read the Excel file into a data frame
+file_path <-
+"C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+# Get current date and time
+current_datetime <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+# Create the scatter plot with trendline
+ggplot(df_new, aes(x = `GDP per capita`, y = Score)) +
+geom_point(aes(color = "Data Points"), size = 3) +
+geom_smooth(method = "lm", se = FALSE, aes(color = "Trendline")) +
+scale_color_manual(values = c("Data Points" = "blue", "Trendline" =
+"red")) +
+xlab("GDP per Capita") +
+ylab("Happiness Score") +
+ggtitle(paste("Happiness Score vs GDP per Capita with Trendline -
+Student ID:", student_id, "-", current_datetime)) +
+theme_minimal() +
+theme(panel.grid.major = element_line(colour = "grey")) +
+theme(legend.title = element_blank())
+
+Task6
+# Variables
+student_id <- "<Student ID>"
+# Read the Excel file into a data frame
+file_path <-
+"C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+# Get current date and time
+current_datetime <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+# Select Columns for Correlation Matrix
+selected_columns <- df_new %>% select(Score, `GDP per capita`, `Social
+support`, Generosity)
+# Calculate Correlation Matrix
+correlation_matrix <- cor(selected_columns, use =
+"pairwise.complete.obs")
+# Create Heatmap
+corrplot(correlation_matrix, method = "color", type = "upper",
+title = paste("Heatmap of Correlations - StudentID:", student_id,
+"-", current_datetime),
+tl.col = "black", tl.srt = 45, number.cex = 0.7, addCoef.col =
+"black")
