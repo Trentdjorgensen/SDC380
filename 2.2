@@ -1,0 +1,182 @@
+#Task1
+from IPython.display import display, Markdown
+from datetime import datetime
+import pandas as pd #import pandas library
+todays_date = datetime.now().strftime("%Y-%m-%d")
+student_id = "StudentID"
+file_path =
+'C:\\Files\\Excel\\DA_PythonR\\2019_Happiness_Index_v2_Task1.xlsx'
+df = pd.read_excel(file_path)
+duplicate_rows_before = df[df.duplicated()] #find duplicated rows
+display(Markdown(f"### {student_id} – {todays_date}")) #display
+Header Text
+display(Markdown("## Duplicate Rows before cleaning")) #display
+Header Text
+display(duplicate_rows_before) #display # of duplicated rows
+df_cleaned = df.copy() #Make copy of data frame
+df_cleaned.drop_duplicates(inplace=True) #delete duplicates
+duplicate_rows_after = df_cleaned[ df_cleaned.duplicated()] #find
+duplicated rows
+display(Markdown("## Duplicate Rows after cleaning")) #display Header
+Text
+display(duplicate_rows_after) #display rows after cleaning
+count_before = unique_countries = df['Country or
+region'].value_counts() #count countries
+misspelled_countries = ['Icleand', 'Swtierland', 'Canda'] # Manually
+identified Correcting Misspellings
+misspellings_correction = {
+'Icleand': 'Iceland',
+'Swtierland': 'Switzerland',
+'Canda': 'Canada'
+}
+df_cleaned['Country or region'].replace(misspellings_correction,
+inplace=True) #Search/replace in "cleaned" dataset
+count_after = unique_countries = df_cleaned['Country or region']
+.value_counts()
+replaced_count = sum((count_before - count_after).fillna(0))
+display(Markdown(f"### {student_id} - {todays_date}")) #display
+Header Text
+display(Markdown(f"**{int(replaced_count)} entries were replaced.**"))
+#finding Missing Values
+missing_values_before = df.isnull().sum()
+display(Markdown(f"## {student_id} – {todays_date}")) #display Header
+Text
+display(Markdown("## Number of missing values in each column"))
+display(missing_values_before)
+#Fill in missing values with the median of the row. Median because it
+is less sensitive to outliers
+for col in missing_values_before.index:
+if missing_values_before[col] > 0:
+median_value = df_cleaned[col].median() #Get the median of
+the column where the missing value is
+df_cleaned[col].fillna(median_value, inplace=True) #Fill
+the missing value with the median
+missing_values_after = df_cleaned.isnull().sum()
+display(Markdown("## Number of missing values in each column after
+filling with median"))
+display(missing_values_after)
+#Finding Outliers using 3.5 * IQR method
+outliers = {}
+numerical_columns = df.select_dtypes(include=['float64',
+'int64']).columns #Find numerical data types
+for col in numerical_columns:
+Q1 = df[col].quantile(0.25) #Calculate Q1
+Q3 = df[col].quantile(0.75) #Calculate Q3
+IQR = Q3 - Q1
+outliers[col] = df[(df[col] < (Q1 - 3.5 * IQR)) | (df[col] > (Q3 +
+3.5 * IQR))]
+display(Markdown(f"## {student_id} - {todays_date}")) #display Header
+text
+display(Markdown("## Outliers"))
+for col, outlier_df in outliers.items():
+if not outlier_df.empty:
+display(Markdown(f"**{col}:**"))
+display(outlier_df[col])
+display(Markdown("**After cleaning:**"))
+for col in outliers.keys():
+if not outliers[col].empty:
+median_value = df_cleaned[col].median()
+outlier_indices = outliers[col].index
+df_cleaned.loc[outlier_indices, col] = median_value
+display(Markdown(f"**{col}:**"))
+display(df_cleaned.loc[outlier_indices, col])
+cleaned_file_path_35 =
+'C:\\Files\\Excel\\DA_PythonR\\2019_Happiness_Index_v2_Task1_Cleaned.x
+lsx'
+df_cleaned.to_excel(cleaned_file_path_35, index=False)
+
+#Task2
+from datetime import datetime
+import pandas as pd
+from IPython.display import display, Markdown
+# Load the dataset into a new DataFrame
+df_new =
+pd.read_excel('C:\\Files\\Excel\\DA_PythonR\\2019_Happiness_Index_v2_T
+ask2.xlsx')
+import pandas as pd #import pandas library
+todays_date = datetime.now().strftime("%Y-%m-%d")
+student_id = "StudentID"
+display(Markdown(f"### {student_id} – {todays_date}")) #display
+Header Text
+mean_happiness_score = df_new['Score'].mean() #Mean Happiness Score
+std_happiness_score = df_new['Score'].std() #Standard Deviation
+median_happiness_score = df_new['Score'].median() #Median Happiness
+Score
+#Calculate Correlation between Happiness Score and Life Expectancy
+correlation_happiness_life_expectancy =
+df_new['Score'].corr(df_new['Healthy life expectancy'])
+min_happiness_score = df_new['Score'].min() #Calculate Minimum
+Happiness Score
+max_happiness_score = df_new['Score'].max() #Calculate Maximum
+Happiness Score
+#Calculate 25th Percentile of Freedom Scores
+freedom_25th_percentile = df_new['Freedom to make life
+choices'].quantile(0.25)
+#Display Calculated Statistics
+print("Mean Happiness Score:", mean_happiness_score)
+print("Standard Deviation of Happiness Score:", std_happiness_score)
+print("Median Happiness Score:", median_happiness_score)
+print("Correlation between Happiness Score and Life Expectancy:",
+correlation_happiness_life_expectancy)
+print("Minimum Happiness Score:", min_happiness_score)
+print("Maximum Happiness Score:", max_happiness_score)
+print("25th Percentile of Freedom Scores:", freedom_25th_percentile)
+
+Task3
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from datetime import datetime
+student_id = "StudentID"
+# Load the dataset into a new DataFrame
+df_new =
+pd.read_excel('C:\\Files\\Excel\\DA_PythonR\\2019_Happiness_Index_v2_T
+ask2.xlsx')
+# Get current date and time
+current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+plt.figure(figsize=(10, 6))
+plt.hist(df_new['Score'], bins=20, color='skyblue', edgecolor='black')
+plt.xlabel('Happiness Score')
+plt.ylabel('Number of Countries')
+plt.title(f'Histogram of Number of Countries vs. Happiness Score -
+StudentID: {student_id} - {current_datetime}')
+plt.grid(True)
+plt.show()
+
+top_10_countries = df_new.nlargest(10, 'Score')
+plt.figure(figsize=(12, 8))
+plt.barh(top_10_countries['Country or region'],
+top_10_countries['Score'], color='green')
+plt.xlabel('Happiness Score')
+plt.ylabel('Country')
+plt.title(f'Top 10 Countries by Happiness Score - StudentID:
+{student_id} - {current_datetime}')
+plt.gca().invert_yaxis()
+plt.grid(True)
+plt.show()
+
+x = df_new['GDP per capita']
+y = df_new['Score']
+z = np.polyfit(x, y, 1)
+p = np.poly1d(z)
+plt.figure(figsize=(12, 8))
+plt.scatter(x, y, label='Data Points', color='blue')
+plt.plot(x, p(x), label=f'Trendline: y = {z[0]:.2f}x + {z[1]:.2f}',
+color='red')
+plt.xlabel('GDP per Capita')
+plt.ylabel('Happiness Score')
+plt.title(f'Happiness Score vs GDP per Capita with Trendline -
+StudentID: {student_id} - {current_datetime}')
+plt.legend()
+plt.grid(True)
+
+selected_columns = ['Score', 'GDP per capita', 'Social support',
+'Generosity']
+correlation_matrix = df_new[selected_columns].corr()
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm',
+fmt=".2f")
+plt.title(f'Heatmap of Correlations - StudentID: {student_id} -
+{current_datetime}')
+plt.show()
